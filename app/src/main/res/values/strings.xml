@@ -1,0 +1,14 @@
+<resources>
+    <string name="app_name">TouchMe</string>
+
+    <string name="double_tap">Double Tap</string>
+    <string name="single_tap">Single Tap</string>
+    <string name="on_long_press">Long Press</string>
+    <string name="swipe_left">Swipe Left</string>
+    <string name="scroll_up">Scroll Up</string>
+    <string name="swipe_right">Swipe Right</string>
+    <string name="scroll_down">Scroll Down</string>
+    <string name="shake_me">Shake Me</string>
+    <string name="wait">Wait</string>
+
+</resources>
