@@ -1,8 +1,5 @@
 package com.android.touchme.view;
 
-import android.animation.Animator;
-import android.animation.AnimatorListenerAdapter;
-import android.animation.ObjectAnimator;
 import android.content.Intent;
 import android.content.res.AssetFileDescriptor;
 import android.graphics.Color;
@@ -10,12 +7,11 @@ import android.graphics.PorterDuff;
 import android.hardware.SensorManager;
 import android.media.MediaPlayer;
 import android.os.Bundle;
-import android.os.Handler;
+import android.os.CountDownTimer;
 import android.support.v4.view.GestureDetectorCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
-import android.view.animation.AccelerateInterpolator;
 import android.widget.ImageButton;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -39,9 +35,9 @@ public class MainActivity extends AppCompatActivity implements GestureDetector.O
     private static int progressTime = 3 * 1000;
     private static int successCount = 0;
     private static boolean isPaused = false;
-    private static boolean isJustShaked = false;
     private final MediaPlayer mediaPlayer = new MediaPlayer();
     private static long currentProgress = 0;
+    private static int tickTime = progressTime/100;
 
     @Bind(R.id.txt_touch_event) TextView txtTouchEvent;
     @Bind(R.id.progressBar) ProgressBar timerProgress;
@@ -51,7 +47,7 @@ public class MainActivity extends AppCompatActivity implements GestureDetector.O
     private Map<Integer, String> touchEvents;
     private GestureDetectorCompat gestureDetectorCompat;
     private boolean isTouched = false;
-    private ObjectAnimator objectAnimator;
+    private CountDownTimer countDownTimer;
     private PreferenceUtil preferenceUtil;
 
     @Override
@@ -88,13 +84,9 @@ public class MainActivity extends AppCompatActivity implements GestureDetector.O
         super.onDestroy();
         successCount = 0;
         currentProgress = 0;
-        if (objectAnimator!=null ) {
-            objectAnimator.cancel();
+        if (countDownTimer !=null ) {
+            countDownTimer.cancel();
         }
-
-//        if (viewPropertyAnimator !=null) {
-//            viewPropertyAnimator.cancel();
-//        }
     }
 
     @Override
@@ -106,19 +98,19 @@ public class MainActivity extends AppCompatActivity implements GestureDetector.O
     // overrides of Shake Detector
     @Override
     public void hearShake() {
-        onTouch(Constants.SHAKE_PHONE);
+        onTouch(Constants.SHAKE_PHONE, 0, 0);
     }
 
     // overrides of GestureDetector.OnDoubleTapListener
     @Override
     public boolean onSingleTapConfirmed(MotionEvent e) {
-        onTouch(Constants.SINGLE_TAP);
+        onTouch(Constants.SINGLE_TAP, e.getX(), e.getY());
         return false;
     }
 
     @Override
     public boolean onDoubleTap(MotionEvent e) {
-        onTouch(Constants.DOUBLE_TAP);
+        onTouch(Constants.DOUBLE_TAP, e.getX(), e.getY());
         return false;
     }
 
@@ -151,7 +143,7 @@ public class MainActivity extends AppCompatActivity implements GestureDetector.O
 
     @Override
     public void onLongPress(MotionEvent e) {
-        onTouch(Constants.ON_LONG_PRESS);
+        onTouch(Constants.ON_LONG_PRESS, e.getX(), e.getY());
     }
 
     @Override
@@ -185,16 +177,16 @@ public class MainActivity extends AppCompatActivity implements GestureDetector.O
 
         switch (direction) {
             case up:
-                onTouch(Constants.SCROLL_UP);
+                onTouch(Constants.SCROLL_UP, e1.getX(), e1.getY());
                 break;
             case down:
-                onTouch(Constants.SCROLL_DOWN);
+                onTouch(Constants.SCROLL_DOWN,e1.getX(), e1.getY());
                 break;
             case left:
-                onTouch(Constants.SWIPE_LEFT);
+                onTouch(Constants.SWIPE_LEFT, e1.getX(), e1.getY());
                 break;
             case right:
-                onTouch(Constants.SWIPE_RIGHT);
+                onTouch(Constants.SWIPE_RIGHT, e1.getX(), e1.getY());
                 break;
         }
         return onSwipe(direction);
@@ -290,23 +282,16 @@ public class MainActivity extends AppCompatActivity implements GestureDetector.O
         sd.start(sensorManager);
     }
 
-    public void onTouch(Integer touchedEvent) {
-
-        if (!objectAnimator.isStarted()) {
-            return;
-        }
+    public void onTouch(Integer touchedEvent, float x, float y) {
 
         if (touchedEvent != Constants.WAIT) {
             cancelProgressAnimation();
         }
 
-        if (touchedEvent == Constants.SHAKE_PHONE) {
-            isJustShaked = true;
-        }
-
         String event = txtTouchEvent.getText().toString();
 
         if (event.equals(touchEvents.get(touchedEvent))) {
+
             successCount++;
             setNumberOfSuccessCount();
             touchEvents.remove(touchedEvent);
@@ -359,35 +344,26 @@ public class MainActivity extends AppCompatActivity implements GestureDetector.O
     private void setTouchEvent(Integer touchEvent) {
         isTouched = false;
         txtTouchEvent.setText(touchEvents.get(touchEvent));
-        if (isJustShaked) {
-            new Handler().postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    startCountingProgress();
-                }
-            }, 1500);
-            isJustShaked = false;
-            return;
-        }
         startCountingProgress();
     }
 
     private void initialiseCounter() {
-        objectAnimator = ObjectAnimator.ofInt(timerProgress, "progress", 0, 100);
-        objectAnimator.setDuration(progressTime);
-        objectAnimator.setInterpolator(new AccelerateInterpolator());
-        objectAnimator.addListener(new AnimatorListenerAdapter() {
+
+        countDownTimer = new CountDownTimer(progressTime, tickTime) {
             @Override
-            public void onAnimationEnd(Animator animation) {
-                super.onAnimationEnd(animation);
-                if (timerProgress.getProgress() != 100) {
-                    return;
-                }
+            public void onTick(long millisUntilFinished) {
+                timerProgress.setProgress((int)(progressTime - millisUntilFinished)/tickTime);
+            }
+
+            @Override
+            public void onFinish() {
+                timerProgress.setProgress(progressTime);
                 if (!isTouched) {
-                    onTouch(Constants.WAIT);
+                    timerProgress.clearAnimation();
+                    onTouch(Constants.WAIT, 0, 0);
                 }
             }
-        });
+        };
     }
 
     private void initializeColorToProgress(){
@@ -395,24 +371,24 @@ public class MainActivity extends AppCompatActivity implements GestureDetector.O
     }
 
     private void startCountingProgress() {
-        objectAnimator.start();
+        countDownTimer.start();
     }
 
     private void cancelProgressAnimation() {
         isTouched = true;
-        objectAnimator.setCurrentPlayTime(0);
-        objectAnimator.cancel();
+        timerProgress.setProgress(0);
+        countDownTimer.cancel();
     }
 
     private void resumeProgress() {
-        objectAnimator.start();
-        objectAnimator.setCurrentPlayTime(currentProgress);
+        countDownTimer.start();
+        timerProgress.setProgress((int)currentProgress);
         btnPlayOrPause.setImageDrawable(getResources().getDrawable(R.drawable.pause));
     }
 
     private void pauseProgress() {
-        currentProgress = objectAnimator.getCurrentPlayTime();
-        objectAnimator.cancel();
+        currentProgress = timerProgress.getProgress();
+        countDownTimer.cancel();
         btnPlayOrPause.setImageDrawable(getResources().getDrawable(R.drawable.play));
     }
 
