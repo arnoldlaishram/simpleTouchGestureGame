@@ -10,6 +10,7 @@ import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.support.v4.view.GestureDetectorCompat;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.widget.ImageButton;
@@ -19,6 +20,7 @@ import android.widget.TextView;
 import com.android.touchme.Constants;
 import com.android.touchme.Data;
 import com.android.touchme.R;
+import com.android.touchme.listener.CountDownListener;
 import com.android.touchme.util.PreferenceUtil;
 import com.squareup.seismic.ShakeDetector;
 
@@ -30,14 +32,15 @@ import butterknife.ButterKnife;
 import butterknife.OnClick;
 
 public class MainActivity extends AppCompatActivity implements GestureDetector.OnDoubleTapListener,
-        GestureDetector.OnGestureListener, ShakeDetector.Listener {
+        GestureDetector.OnGestureListener, ShakeDetector.Listener, CountDownListener {
 
-    private static int progressTime = 3 * 1000;
+    private static int maxProgressTime = 3 * 1000;
+    private int intermidateProgressTime = maxProgressTime;
     private static int successCount = 0;
     private static boolean isPaused = false;
     private final MediaPlayer mediaPlayer = new MediaPlayer();
-    private static long currentProgress = 0;
-    private static int tickTime = progressTime/100;
+    private static int countDownInterval = maxProgressTime /100;
+    private long timeRemaining ;
 
     @Bind(R.id.txt_touch_event) TextView txtTouchEvent;
     @Bind(R.id.progressBar) ProgressBar timerProgress;
@@ -47,7 +50,7 @@ public class MainActivity extends AppCompatActivity implements GestureDetector.O
     private Map<Integer, String> touchEvents;
     private GestureDetectorCompat gestureDetectorCompat;
     private boolean isTouched = false;
-    private CountDownTimer countDownTimer;
+    private static CountDownTimer countDownTimer;
     private PreferenceUtil preferenceUtil;
 
     @Override
@@ -57,9 +60,9 @@ public class MainActivity extends AppCompatActivity implements GestureDetector.O
 
         ButterKnife.bind(this);
 
-        gestureDetectorCompat = new GestureDetectorCompat(this, this);
         preferenceUtil = new PreferenceUtil(this);
 
+        enableGestureDetector();
         setNumberOfSuccessCount();
         initializeColorToProgress();
         initializeShakeDetection();
@@ -83,7 +86,6 @@ public class MainActivity extends AppCompatActivity implements GestureDetector.O
     protected void onDestroy() {
         super.onDestroy();
         successCount = 0;
-        currentProgress = 0;
         if (countDownTimer !=null ) {
             countDownTimer.cancel();
         }
@@ -91,7 +93,9 @@ public class MainActivity extends AppCompatActivity implements GestureDetector.O
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
-        this.gestureDetectorCompat.onTouchEvent(event);
+        if (gestureDetectorCompat != null) {
+            gestureDetectorCompat.onTouchEvent(event);
+        }
         return super.onTouchEvent(event);
     }
 
@@ -228,6 +232,19 @@ public class MainActivity extends AppCompatActivity implements GestureDetector.O
         return (rad * 180 / Math.PI + 180) % 360;
     }
 
+    @Override
+    public void onTick(long timeRemaining) {
+        timerProgress.setProgress((int)(maxProgressTime - timeRemaining)/ countDownInterval);
+    }
+
+    @Override
+    public void onCountDownFinished() {
+        timerProgress.setProgress(maxProgressTime);
+        if (!isTouched) {
+            onTouch(Constants.WAIT, 0, 0);
+        }
+    }
+
     public enum Direction {
         up,
         down,
@@ -349,21 +366,27 @@ public class MainActivity extends AppCompatActivity implements GestureDetector.O
 
     private void initialiseCounter() {
 
-        countDownTimer = new CountDownTimer(progressTime, tickTime) {
+        countDownTimer = new CountDownTimer(intermidateProgressTime, countDownInterval) {
+
             @Override
             public void onTick(long millisUntilFinished) {
-                timerProgress.setProgress((int)(progressTime - millisUntilFinished)/tickTime);
+                Log.d("tick", intermidateProgressTime+"");
+                Log.d("tick -- ", millisUntilFinished+"");
+                timeRemaining = millisUntilFinished;
+                timerProgress.setProgress((int)(maxProgressTime - timeRemaining)/ countDownInterval);
             }
 
             @Override
             public void onFinish() {
-                timerProgress.setProgress(progressTime);
+                timerProgress.setProgress(maxProgressTime);
                 if (!isTouched) {
-                    timerProgress.clearAnimation();
                     onTouch(Constants.WAIT, 0, 0);
                 }
             }
         };
+        /*MyCountDownTimer.setMillisInFuture(intermidateProgressTime);
+        MyCountDownTimer.setCountDownInterval(countDownInterval);
+        countDownTimer = MyCountDownTimer.getInstance();*/
     }
 
     private void initializeColorToProgress(){
@@ -371,6 +394,7 @@ public class MainActivity extends AppCompatActivity implements GestureDetector.O
     }
 
     private void startCountingProgress() {
+        intermidateProgressTime = maxProgressTime;
         countDownTimer.start();
     }
 
@@ -381,15 +405,28 @@ public class MainActivity extends AppCompatActivity implements GestureDetector.O
     }
 
     private void resumeProgress() {
+        intermidateProgressTime = (int)timeRemaining;
+        Log.d("resume", intermidateProgressTime+"");
+        initialiseCounter();
         countDownTimer.start();
-        timerProgress.setProgress((int)currentProgress);
+        enableGestureDetector();
         btnPlayOrPause.setImageDrawable(getResources().getDrawable(R.drawable.pause));
     }
 
     private void pauseProgress() {
-        currentProgress = timerProgress.getProgress();
+        intermidateProgressTime = (int)timeRemaining;
+        Log.d("pause", intermidateProgressTime+"");
+        disableGestureDetector();
         countDownTimer.cancel();
         btnPlayOrPause.setImageDrawable(getResources().getDrawable(R.drawable.play));
+    }
+
+    private void enableGestureDetector() {
+        gestureDetectorCompat = new GestureDetectorCompat(this, this);
+    }
+
+    private void disableGestureDetector() {
+        gestureDetectorCompat = null;
     }
 
 }
