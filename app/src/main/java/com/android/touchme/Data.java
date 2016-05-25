@@ -2,6 +2,8 @@ package com.android.touchme;
 
 import android.app.Activity;
 
+import com.android.touchme.model.Question;
+
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -19,19 +21,19 @@ public class Data {
         this.activity = activity;
     }
 
-    public Map<Integer, String> getTouchEvents() {
+    public Map<Integer, Question> getAllEvents() {
 
-        Map<Integer, String> data = new LinkedHashMap<>();
+        Map<Integer, Question> data = new LinkedHashMap<>();
 
-        data.put(Constants.DOUBLE_TAP, activity.getResources().getString(R.string.double_tap));
-        data.put(Constants.SWIPE_LEFT, activity.getResources().getString(R.string.swipe_left));
-        data.put(Constants.SINGLE_TAP, activity.getResources().getString(R.string.single_tap));
-        data.put(Constants.SWIPE_RIGHT, activity.getResources().getString(R.string.swipe_right));
-        data.put(Constants.ON_LONG_PRESS, activity.getResources().getString(R.string.on_long_press));
-        data.put(Constants.SCROLL_DOWN, activity.getResources().getString(R.string.scroll_down));
-        data.put(Constants.WAIT, activity.getResources().getString(R.string.wait));
-        data.put(Constants.SHAKE_PHONE, activity.getResources().getString(R.string.shake_me));
-        data.put(Constants.SCROLL_UP, activity.getResources().getString(R.string.scroll_up));
+        data.put(Constants.DOUBLE_TAP, new Question(activity.getResources().getString(R.string.double_tap), activity.getResources().getString(R.string.double_tap)));
+        data.put(Constants.SWIPE_LEFT, new Question(activity.getResources().getString(R.string.swipe_left), activity.getResources().getString(R.string.swipe_left)));
+        data.put(Constants.SINGLE_TAP, new Question(activity.getResources().getString(R.string.single_tap), activity.getResources().getString(R.string.single_tap)));
+        data.put(Constants.SWIPE_RIGHT, new Question(activity.getResources().getString(R.string.swipe_right), activity.getResources().getString(R.string.swipe_right)));
+        data.put(Constants.ON_LONG_PRESS, new Question(activity.getResources().getString(R.string.on_long_press), activity.getResources().getString(R.string.on_long_press)));
+        data.put(Constants.SCROLL_DOWN, new Question(activity.getResources().getString(R.string.scroll_down), activity.getResources().getString(R.string.scroll_down)));
+        data.put(Constants.WAIT, new Question(activity.getResources().getString(R.string.wait), activity.getResources().getString(R.string.wait)));
+        data.put(Constants.SHAKE_PHONE, new Question(activity.getResources().getString(R.string.shake_me), activity.getResources().getString(R.string.shake_me)));
+        data.put(Constants.SCROLL_UP, new Question(activity.getResources().getString(R.string.scroll_up), activity.getResources().getString(R.string.scroll_up)));
 
         return data;
     }
