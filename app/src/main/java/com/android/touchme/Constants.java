@@ -12,6 +12,6 @@ public class Constants {
     public static final Integer SCROLL_DOWN = 5;
     public static final Integer SWIPE_LEFT = 6;
     public static final Integer SWIPE_RIGHT = 7;
-    public static final Integer SHAKE_PHONE = 8;
+    //public static final Integer SHAKE_PHONE = 8;
     public static final Integer WAIT = 9;
 }

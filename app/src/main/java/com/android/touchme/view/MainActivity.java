@@ -7,8 +7,9 @@ import android.graphics.PorterDuff;
 import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.os.CountDownTimer;
-import android.support.v4.view.GestureDetectorCompat;
 import android.util.Log;
+import android.view.View;
+import android.view.ViewConfiguration;
 import android.widget.ImageButton;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -16,6 +17,7 @@ import android.widget.TextView;
 import com.android.touchme.Constants;
 import com.android.touchme.Data;
 import com.android.touchme.R;
+import com.android.touchme.custom.CircularProgress;
 import com.android.touchme.model.Question;
 import com.android.touchme.util.PreferenceUtil;
 
@@ -31,19 +33,20 @@ import butterknife.OnClick;
 
 public class MainActivity extends EventsActivity {
 
-    private static int maxProgressTime = 3 * 1000;
+    private static int maxProgressTime;
     private static int successCount = 0;
     private static boolean isPaused = false;
-    private static final MediaPlayer mediaPlayer = new MediaPlayer();
-    private static int countDownInterval = maxProgressTime /100;
+    private static Map<Integer, Question> touchEvents;
+    private static int countDownInterval;
     private static CountDownTimer countDownTimer;
     private static Random random = new Random();
-    private static Map<Integer, Question> touchEvents;
+    private static final MediaPlayer mediaPlayer = new MediaPlayer();
 
     @Bind(R.id.txt_touch_event) TextView txtTouchEvent;
     @Bind(R.id.progressBar) ProgressBar timerProgress;
     @Bind(R.id.img_btn_pause) ImageButton btnPlayOrPause;
     @Bind(R.id.txt_success_count) TextView txtSuccessCount;
+    @Bind(R.id.progressbar_circular) CircularProgress circleProgress;
 
     private boolean isTouched = false;
     private PreferenceUtil preferenceUtil;
@@ -58,6 +61,8 @@ public class MainActivity extends EventsActivity {
 
         preferenceUtil = new PreferenceUtil(this);
 
+        initializeMaximumProgressTime(4000);
+        initializeCountDownInterval();
         enableGestureDetector();
         displayNumberOfSuccessCount();
         initializeColorToProgress();
@@ -92,6 +97,27 @@ public class MainActivity extends EventsActivity {
     }
 
     public void onTouch(Integer touchedEvent) {
+
+        if (touchedEvent == Constants.ON_LONG_PRESS) {
+            showCircularProgress();
+            final int doubleTapOutTime = ViewConfiguration.getDoubleTapTimeout();
+            final int countDownInterval = doubleTapOutTime / 100;
+            new CountDownTimer(doubleTapOutTime, countDownInterval) {
+
+                @Override
+                public void onTick(long millisUntilFinished) {
+                    circleProgress.setProgress((int)(doubleTapOutTime - millisUntilFinished) / countDownInterval);
+                }
+
+                @Override
+                public void onFinish() {
+                    circleProgress.setProgress(doubleTapOutTime);
+                    hideCircularProgress();
+                }
+            }.start();
+        } else {
+            hideCircularProgress();
+        }
 
         if (touchedEvent != Constants.WAIT) {
             cancelProgressAnimation();
@@ -210,6 +236,22 @@ public class MainActivity extends EventsActivity {
         List<Integer> keys = new ArrayList<Integer>(touchEvents.keySet());
         Log.d("key", keys.get(random.nextInt(keys.size()-1))+"");
         return keys.get(random.nextInt(keys.size()));
+    }
+
+    private void initializeCountDownInterval() {
+        countDownInterval = maxProgressTime /100;
+    }
+
+    private void initializeMaximumProgressTime(int maxTime) {
+        maxProgressTime = maxTime;
+    }
+
+    private void showCircularProgress() {
+        circleProgress.setVisibility(View.VISIBLE);
+    }
+
+    private void hideCircularProgress() {
+        circleProgress.setVisibility(View.GONE);
     }
 
 }

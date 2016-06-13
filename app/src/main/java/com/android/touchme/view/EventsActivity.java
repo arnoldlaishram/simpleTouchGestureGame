@@ -37,7 +37,7 @@ public abstract class EventsActivity extends AppCompatActivity implements Gestur
     // overrides of Shake Detector
     @Override
     public void hearShake() {
-        onTouch(Constants.SHAKE_PHONE);
+        //onTouch(Constants.SHAKE_PHONE);
     }
 
     // overrides of GestureDetector.OnDoubleTapListener

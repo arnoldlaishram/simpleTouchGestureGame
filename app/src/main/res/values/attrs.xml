@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <declare-styleable name="DonutProgress">
+    <declare-styleable name="CircularProgress">
         <attr name="donut_progress" format="integer"/>
         <attr name="donut_max" format="integer"/>
 
@@ -39,4 +39,19 @@
         <attr name="mpb_background_color" format="color" />
         <attr name="mpb_flat" format="boolean" />
     </declare-styleable>
+
+    <declare-styleable name="CircleProgress">
+        <attr name="circle_progress" format="integer"/>
+        <attr name="circle_max" format="integer"/>
+
+        <attr name="circle_unfinished_color" format="color"/>
+        <attr name="circle_finished_color" format="color"/>
+
+        <attr name="circle_text_size" format="dimension"/>
+        <attr name="circle_text_color" format="color"/>
+
+        <attr name="circle_prefix_text" format="string"/>
+        <attr name="circle_suffix_text" format="string"/>
+    </declare-styleable>
+
 </resources>

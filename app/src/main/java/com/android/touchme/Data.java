@@ -32,7 +32,7 @@ public class Data {
         data.put(Constants.ON_LONG_PRESS, new Question(activity.getResources().getString(R.string.on_long_press), activity.getResources().getString(R.string.on_long_press)));
         data.put(Constants.SCROLL_DOWN, new Question(activity.getResources().getString(R.string.scroll_down), activity.getResources().getString(R.string.scroll_down)));
         data.put(Constants.WAIT, new Question(activity.getResources().getString(R.string.wait), activity.getResources().getString(R.string.wait)));
-        data.put(Constants.SHAKE_PHONE, new Question(activity.getResources().getString(R.string.shake_me), activity.getResources().getString(R.string.shake_me)));
+        //data.put(Constants.SHAKE_PHONE, new Question(activity.getResources().getString(R.string.shake_me), activity.getResources().getString(R.string.shake_me)));
         data.put(Constants.SCROLL_UP, new Question(activity.getResources().getString(R.string.scroll_up), activity.getResources().getString(R.string.scroll_up)));
 
         return data;
